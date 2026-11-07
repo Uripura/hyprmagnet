@@ -125,7 +125,19 @@ void transformPointer(Vector2D& pos) {
         return;
 
     if (WIN && (!NEWWIN || WIN == NEWWIN) && WIN->m_ruleApplicator->m_tagKeeper.isTagged("magnet")) {
-        const auto WSRULE = Config::workspaceRuleMgr()->getWorkspaceRuleFor(WIN->layoutTarget()->workspace()).value_or(Config::CWorkspaceRule{});
+		const auto TARGET = WIN->layoutTarget();
+		if (!TARGET)
+			return;
+
+		// A layout target can temporarily have no workspace. Do not pass a
+		// null workspace to the rule manager from the pointer transformer.
+		const auto WORKSPACE = TARGET->workspace();
+		if (!WORKSPACE)
+			return;
+
+		// Keep the workspace alive while its rules are evaluated. Leave the
+		// pointer unchanged when the target has no workspace assigned yet.
+		const auto WSRULE = Config::workspaceRuleMgr()->getWorkspaceRuleFor(WORKSPACE).value_or(Config::CWorkspaceRule{});
         auto       GAPS   = WSRULE.m_gapsOut.value_or(*GAPSOUT);
         auto       BOX    = WIN->getWindowMainSurfaceBox();
         auto       GAPBOX = BOX.copy();
